@@ -217,6 +217,7 @@ def build_forward_backward(H, x, phase, boxes, flags):
          pred_confidences, pred_confs_deltas, pred_boxes_deltas) = build_forward(H, x, phase, reuse)
     else:
         pred_boxes, pred_logits, pred_confidences = build_forward(H, x, phase, reuse)
+#    print '[INFO 1]', pred_boxes.name, pred_logits.name, pred_confidences.name
     with tf.variable_scope('decoder', reuse={'train': None, 'test': True}[phase]):
         outer_boxes = tf.reshape(boxes, [outer_size, H['rnn_len'], 4])
         outer_flags = tf.cast(tf.reshape(flags, [outer_size, H['rnn_len']]), 'int32')
@@ -489,6 +490,11 @@ def train(H, test_images):
                       (i, adjusted_lr, train_loss,
                        test_accuracy * 100, dt * 1000 if i > 0 else 0))
 
+            restore_list = [v for v in tf.global_variables()]
+#            for i in range(len(restore_list)):
+#                print '[INFO 2]', restore_list[i].name
+#            print '[INFO 3]', saver.saver_def.filename_tensor_name, saver.saver_def.restore_op_name
+#            tf.train.write_graph(sess.graph_def, "./", ckpt_file+"_graph.pb", False)
             if global_step.eval() % H['logging']['save_iter'] == 0 or global_step.eval() == max_iter - 1:
                 saver.save(sess, ckpt_file, global_step=global_step)
 

@@ -24,7 +24,7 @@ def get_results(args, H):
     if H['use_rezoom']:
         pred_boxes, pred_logits, pred_confidences, pred_confs_deltas, pred_boxes_deltas = build_forward(H, tf.expand_dims(x_in, 0), 'test', reuse=None)
         grid_area = H['grid_height'] * H['grid_width']
-        pred_confidences = tf.reshape(tf.nn.softmax(tf.reshape(pred_confs_deltas, [grid_area * H['rnn_len'], 2])), [grid_area, H['rnn_len'], 2])
+        pred_confidences = tf.reshape(tf.nn.softmax(tf.reshape(pred_confs_deltas, [grid_area * H['rnn_len'], H['num_classes']])), [grid_area, H['rnn_len'], H['num_classes']])
         if H['reregress']:
             pred_boxes = pred_boxes + pred_boxes_deltas
     else:
@@ -33,6 +33,10 @@ def get_results(args, H):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         saver.restore(sess, args.weights)
+
+        print '[INFO 1]', pred_boxes.name, pred_logits.name, pred_confidences.name
+        tf.train.write_graph(sess.graph_def, "./", "resnet_graph.pb", False)
+        saver.save(sess, 'bankcard.ckpt', global_step=0)
 
         pred_annolist = al.AnnoList()
 
